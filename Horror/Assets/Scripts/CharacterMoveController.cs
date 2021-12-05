@@ -9,9 +9,13 @@ public class CharacterMoveController : MonoBehaviour
     private bool groundedPlayer = true;
     public float playerSpeed = 2.0f;
     public float jumpPower = 1.0f;
-
+    public float glavityValue = -9.81f;
     public Animator Animator;
 
+
+    public Vector3 oldVelocity;
+    
+    public FootStepsSoundManager FootStepsSoundManager;
     // Update is called once per frame
     void Update()
     {
@@ -24,17 +28,29 @@ public class CharacterMoveController : MonoBehaviour
         }
 
         var move = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
-        
-        var movePower = Mathf.Abs(move.z)+Mathf.Abs(move.x);
 
-        Animator.SetFloat("MovePower",movePower);
-        
-        CharacterController.Move(move * Time.deltaTime * playerSpeed);
+        var movePower = Mathf.Abs(move.z) + Mathf.Abs(move.x);
+
+        if(movePower >0){ 
+            FootStepsSoundManager.PlayFootStepSE();
+            }else{ 
+            FootStepsSoundManager.StopFootStepSE();
+            }
+
+
+        Animator.SetFloat("MovePower", movePower);
+
+        playerVelocity = move;
+        playerVelocity = Vector3.Slerp(oldVelocity, playerVelocity, playerSpeed * Time.deltaTime);
+
+        oldVelocity = playerVelocity;
 
         // ‰½‚©“ü—Í‚³‚ê‚Ä‚¢‚ê‚Î
-        if (move != Vector3.zero)
+        if (playerVelocity.magnitude > 0f)
         {
-            gameObject.transform.forward = move;
+            transform.LookAt(transform.position + playerVelocity);
         }
+        playerVelocity.y += glavityValue + Time.deltaTime;
+        CharacterController.Move(playerVelocity * Time.deltaTime * playerSpeed);
     }
 }
